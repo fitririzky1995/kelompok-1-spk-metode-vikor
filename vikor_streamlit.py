@@ -275,6 +275,9 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     elements.append(ideal_table)
     elements.append(Spacer(1, 15))
     
+    # Page Break sebelum hasil perankingan
+    elements.append(PageBreak())
+    
     # Section 4: HASIL PERANKINGAN (Main Result)
     elements.append(Paragraph("4. HASIL PERANKINGAN VIKOR", heading_style))
     
