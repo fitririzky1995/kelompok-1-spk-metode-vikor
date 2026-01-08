@@ -125,7 +125,14 @@ def save_to_history(key, value):
 def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights, alternatives):
     """Generate PDF report dari hasil perhitungan VIKOR"""
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4, 
+        rightMargin=40, 
+        leftMargin=40, 
+        topMargin=40, 
+        bottomMargin=40
+    )
     
     # Container untuk elements
     elements = []
@@ -135,9 +142,9 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=18,
+        fontSize=16,
         textColor=colors.HexColor('#667eea'),
-        spaceAfter=30,
+        spaceAfter=20,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
@@ -145,14 +152,19 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
-        fontSize=14,
+        fontSize=12,
         textColor=colors.HexColor('#764ba2'),
-        spaceAfter=12,
-        spaceBefore=12,
+        spaceAfter=10,
+        spaceBefore=15,
         fontName='Helvetica-Bold'
     )
     
-    normal_style = styles['Normal']
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=9,
+        leading=12
+    )
     
     # Title
     title = Paragraph("HASIL PERHITUNGAN METODE VIKOR", title_style)
@@ -160,84 +172,108 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     
     subtitle = Paragraph(
         f"Sistem Pendukung Keputusan Rekomendasi Laptop<br/>Tanggal: {datetime.now().strftime('%d %B %Y, %H:%M WIB')}", 
-        ParagraphStyle('subtitle', parent=normal_style, alignment=TA_CENTER, fontSize=10)
+        ParagraphStyle('subtitle', parent=normal_style, alignment=TA_CENTER, fontSize=9)
     )
     elements.append(subtitle)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
     
     # Section 1: Ringkasan Perhitungan
     elements.append(Paragraph("1. RINGKASAN PERHITUNGAN", heading_style))
     summary_data = [
         ['Jumlah Alternatif', str(len(alternatives))],
         ['Jumlah Kriteria', str(len(criteria))],
-        ['Metode', 'VIKOR'],
+        ['Metode', 'VIKOR (VIseKriterijumska Optimizacija)'],
         ['Parameter v', '0.5']
     ]
     
-    summary_table = Table(summary_data, colWidths=[3*inch, 3*inch])
+    summary_table = Table(summary_data, colWidths=[2.5*inch, 2.5*inch])
     summary_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f7fa')),
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#667eea')),
-        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f5f7fa')]),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#667eea')),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
     elements.append(summary_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
     
     # Section 2: Kriteria dan Bobot
     elements.append(Paragraph("2. KRITERIA DAN BOBOT", heading_style))
+    
+    # Hitung lebar kolom yang optimal
+    available_width = 5.0 * inch  # Total width available
+    col_widths = [0.4*inch, 2.3*inch, 1.2*inch, 1.1*inch]
+    
     criteria_data = [['No', 'Nama Kriteria', 'Tipe', 'Bobot']]
     for i, (crit, ctype, weight) in enumerate(zip(criteria, criterion_types, weights)):
+        # Truncate nama kriteria jika terlalu panjang
+        crit_display = crit if len(crit) <= 30 else crit[:27] + '...'
         criteria_data.append([
             str(i+1),
-            crit,
+            crit_display,
             'Benefit' if ctype == 'benefit' else 'Cost',
             f"{weight:.4f}"
         ])
     
-    criteria_table = Table(criteria_data, colWidths=[0.5*inch, 2.5*inch, 1.5*inch, 1.5*inch])
+    criteria_table = Table(criteria_data, colWidths=col_widths)
     criteria_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # Kolom No
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),    # Kolom Nama Kriteria
+        ('ALIGN', (2, 0), (-1, -1), 'CENTER'), # Kolom Tipe dan Bobot
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 11),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#667eea')),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#667eea')),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f7fa')]),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]))
     elements.append(criteria_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
     
     # Section 3: Nilai Ideal dan Anti-Ideal
     elements.append(Paragraph("3. NILAI IDEAL (f*) DAN ANTI-IDEAL (f-)", heading_style))
+    
+    ideal_col_widths = [2.5*inch, 1.25*inch, 1.25*inch]
     ideal_data = [['Kriteria', 'f* (Ideal)', 'f- (Anti-Ideal)']]
     for i, crit in enumerate(criteria):
+        crit_display = crit if len(crit) <= 25 else crit[:22] + '...'
         ideal_data.append([
-            crit,
+            crit_display,
             f"{f_star[i]:.4f}",
             f"{f_minus[i]:.4f}"
         ])
     
-    ideal_table = Table(ideal_data, colWidths=[3*inch, 1.5*inch, 1.5*inch])
+    ideal_table = Table(ideal_data, colWidths=ideal_col_widths)
     ideal_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 11),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#667eea')),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#667eea')),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f7fa')]),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]))
     elements.append(ideal_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
     
     # Section 4: HASIL PERANKINGAN (Main Result)
     elements.append(Paragraph("4. HASIL PERANKINGAN VIKOR", heading_style))
@@ -245,33 +281,45 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     # Sort by Rank untuk memastikan urutan 1-9
     result_sorted = result_df.sort_values('Rank').reset_index(drop=True)
     
+    # Lebar kolom yang optimal untuk ranking table
+    rank_col_widths = [0.5*inch, 2.0*inch, 0.9*inch, 0.9*inch, 0.9*inch]
+    
     ranking_data = [['Rank', 'Alternatif', 'Nilai S', 'Nilai R', 'Nilai Q']]
     for idx, row in result_sorted.iterrows():
+        # Truncate nama alternatif jika terlalu panjang
+        alt_display = row['Alternative'] if len(str(row['Alternative'])) <= 25 else str(row['Alternative'])[:22] + '...'
         ranking_data.append([
             str(int(row['Rank'])),
-            row['Alternative'],
+            alt_display,
             f"{row['S']:.4f}",
             f"{row['R']:.4f}",
             f"{row['Q']:.4f}"
         ])
     
-    ranking_table = Table(ranking_data, colWidths=[0.7*inch, 2.3*inch, 1*inch, 1*inch, 1*inch])
+    ranking_table = Table(ranking_data, colWidths=rank_col_widths, repeatRows=1)
     ranking_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#10b981')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # Kolom Rank
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),    # Kolom Alternatif
+        ('ALIGN', (2, 0), (-1, -1), 'CENTER'), # Kolom Nilai
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 11),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#10b981')),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#10b981')),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f7fa')]),
         # Highlight ranking 1 (baris index 1)
         ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#d1fae5')),
         ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     elements.append(ranking_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
     
     # Section 5: Rekomendasi
     best_alternative = result_sorted.iloc[0]
@@ -280,9 +328,9 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     recommendation_text = f"""
     <b>Alternatif Terbaik: {best_alternative['Alternative']}</b><br/>
     <br/>
-    Nilai Q: {best_alternative['Q']:.4f}<br/>
-    Nilai S: {best_alternative['S']:.4f}<br/>
-    Nilai R: {best_alternative['R']:.4f}<br/>
+    <b>Nilai Q:</b> {best_alternative['Q']:.4f}<br/>
+    <b>Nilai S:</b> {best_alternative['S']:.4f}<br/>
+    <b>Nilai R:</b> {best_alternative['R']:.4f}<br/>
     <br/>
     Alternatif ini merupakan pilihan terbaik karena memiliki nilai Q terkecil, 
     yang menunjukkan solusi kompromi terbaik antara kedekatan dengan solusi ideal 
@@ -291,7 +339,7 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     
     recommendation_para = Paragraph(recommendation_text, normal_style)
     elements.append(recommendation_para)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
     
     # Section 6: Interpretasi
     elements.append(Paragraph("6. INTERPRETASI HASIL", heading_style))
@@ -314,7 +362,7 @@ def generate_pdf(result_df, f_star, f_minus, criteria, criterion_types, weights,
     elements.append(interpretation_para)
     
     # Footer
-    elements.append(Spacer(1, 30))
+    elements.append(Spacer(1, 20))
     footer_text = Paragraph(
         "Dibuat oleh Kelompok 1 | Metode VIKOR | Sistem Pendukung Keputusan",
         ParagraphStyle('footer', parent=normal_style, alignment=TA_CENTER, fontSize=8, textColor=colors.grey)
