@@ -550,40 +550,6 @@ def load_custom_css():
 # HALAMAN BERANDA
 # ---------------------------------------
 def page_beranda():
-    st.markdown("""
-    <div class="team-section">
-        <div class="team-title">
-            👥 Tim Pengembang
-        </div>
-        <div class="team-grid">
-            <div class="team-member">
-                <div class="member-name">M Ziran</div>
-                <div class="member-role">Data Engineer / Data Analyst</div>
-            </div>
-            <div class="team-member">
-                <div class="member-name">Syerly</div>
-                <div class="member-role">Research Analyst / Literature Reviewer</div>
-            </div>
-            <div class="team-member">
-                <div class="member-name">Hernan</div>
-                <div class="member-role">Full Stack Data Application Developer</div>
-            </div>
-            <div class="team-member">
-                <div class="member-name">Rizky</div>
-                <div class="member-role">Technical Writer / Documentation Engineer</div>
-            </div>
-            <div class="team-member">
-                <div class="member-name">Farhan</div>
-                <div class="member-role">Data Validation & Computation Analyst</div>
-            </div>
-            <div class="team-member">
-                <div class="member-name">Sarifudin</div>
-                <div class="member-role">Quality Assurance (QA) / Project Controller</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
     st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("""
     ### 📋 Tentang Sistem
